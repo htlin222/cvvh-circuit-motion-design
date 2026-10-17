@@ -1,0 +1,382 @@
+<title>CVVH 血流圖鑑</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: specimen plate — 3D model fills the plate, numbered callouts float on it, an index column lists parts in blood-path order */
+:root{
+  --bg:#eef1f3; --plate:#f8fafb; --ink:#1d2730; --muted:#66727d; --rule:#cfd6dc;
+  --blood:#c4283a; --waste:#c98a12; --fluid:#2a72c9; --hep:#7a4fc0;
+  --f-display:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171c;--plate:#171e24;--ink:#e3e9ee;--muted:#8b98a3;--rule:#2b353e;
+  --blood:#ef4f60;--waste:#e8a933;--fluid:#5b9dee;--hep:#a582e6;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171c;--plate:#171e24;--ink:#e3e9ee;--muted:#8b98a3;--rule:#2b353e;
+  --blood:#ef4f60;--waste:#e8a933;--fluid:#5b9dee;--hep:#a582e6;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.55}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px;border-bottom:1px solid var(--rule);padding-bottom:12px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:900;font-size:clamp(26px,4vw,40px);line-height:1.15;margin:4px 0 0;text-wrap:balance}
+.sub{color:var(--muted);font-size:14px;max-width:46ch;margin:0}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.plate{position:relative;background:var(--plate);border:1px solid var(--rule);border-radius:4px;overflow:hidden;height:min(78vh,720px);min-height:420px;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);background-size:40px 40px;background-position:-1px -1px}
+.plate::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 35%,var(--plate) 92%);pointer-events:none}
+@media (max-width:900px){.plate{height:62vh}}
+canvas{display:block;width:100%;height:100%;position:relative;z-index:1;touch-action:none;cursor:grab}
+canvas:active{cursor:grabbing}
+.labels{position:absolute;inset:0;z-index:2;pointer-events:none}
+.tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;transform:translate(-50%,-50%);transition:opacity .25s;pointer-events:auto;cursor:pointer;white-space:nowrap}
+.tag b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--plate);font:500 11px var(--f-mono)}
+.tag span{font-size:12px;font-weight:500;background:var(--plate);padding:1px 6px;border-radius:3px;border:1px solid var(--rule);opacity:0;transform:translateX(-4px);transition:.2s}
+.tag:hover span,.tag.on span{opacity:1;transform:none}
+.tag.on b{background:var(--blood)}
+.plate .hud{position:absolute;z-index:3;left:12px;bottom:12px;right:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;pointer-events:none}
+.chip{pointer-events:auto;font:500 12px var(--f-body);display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--rule);background:var(--plate);color:var(--ink);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed="false"]{color:var(--muted)}
+.chip[aria-pressed="false"] i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+.chip:focus-visible,.part:focus-visible,.tag:focus-visible{outline:2px solid var(--fluid);outline-offset:2px}
+.spacer{flex:1}
+.hint{position:absolute;z-index:3;top:12px;left:12px;font:11px var(--f-mono);color:var(--muted);letter-spacing:.06em}
+aside{display:grid;gap:14px;align-content:start;min-width:0}
+.card{background:var(--plate);border:1px solid var(--rule);border-radius:4px;padding:14px 16px}
+.card h2{font-family:var(--f-display);font-size:16px;margin:0 0 8px;font-weight:600}
+.detail h3{font-family:var(--f-display);font-size:20px;margin:2px 0 4px}
+.detail .en{font:12px var(--f-mono);color:var(--muted)}
+.detail p{margin:8px 0 0;font-size:14px}
+.detail .val{margin-top:10px;font:500 13px var(--f-mono);display:inline-block;padding:3px 8px;border-radius:3px;background:var(--bg)}
+.list{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.part{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;width:100%;text-align:left;font:14px var(--f-body);color:var(--ink);background:none;border:0;padding:6px 6px;border-radius:3px;cursor:pointer}
+.part:hover{background:var(--bg)}
+.part.on{background:var(--bg);font-weight:700}
+.part b{font:500 11px var(--f-mono);color:var(--muted)}
+.part em{font-style:normal;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.readout{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px;margin:0}
+.readout dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.readout dt{color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Plate 01 · Infomed HF440 · CVVH</div>
+      <h1>連續性靜脈靜脈血液過濾</h1>
+    </div>
+    <p class="sub">血液、置換液、廢液與抗凝劑四條路線。拖曳旋轉、雙指縮放，點編號看構造說明。</p>
+  </header>
+
+  <div class="main">
+    <div class="plate" id="plate">
+      <div class="hint">DRAG · ZOOM · TAP</div>
+      <canvas id="c"></canvas>
+      <div class="labels" id="labels"></div>
+      <div class="hud">
+        <button class="chip" data-layer="blood" aria-pressed="true" style="--c:var(--blood)"><i></i>血液</button>
+        <button class="chip" data-layer="fluid" aria-pressed="true" style="--c:var(--fluid)"><i></i>置換液</button>
+        <button class="chip" data-layer="waste" aria-pressed="true" style="--c:var(--waste)"><i></i>廢液</button>
+        <button class="chip" data-layer="hep" aria-pressed="true" style="--c:var(--hep)"><i></i>抗凝</button>
+        <span class="spacer"></span>
+        <button class="chip" id="spin" aria-pressed="true" style="--c:var(--ink)"><i></i>自動旋轉</button>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card detail" id="detail" aria-live="polite"></div>
+      <div class="card">
+        <h2>構造索引（依血流順序）</h2>
+        <ul class="list" id="list"></ul>
+      </div>
+      <div class="card">
+        <h2>照片上的設定</h2>
+        <dl class="readout">
+          <dt>血液流速 Qb</dt><dd>150 ml/min</dd>
+          <dt>置換液 Qr</dt><dd>2000 ml/h</dd>
+          <dt>　前稀釋 50%</dt><dd>1000 ml/h</dd>
+          <dt>　後稀釋 50%</dt><dd>1000 ml/h</dd>
+          <dt>體液減輕（淨脫水）</dt><dd>100 ml/h</dd>
+          <dt>廢液 = 置換 + 脫水</dt><dd>2100 ml/h</dd>
+          <dt>動脈壓 / 靜脈壓</dt><dd>−110 / 54 mmHg</dd>
+          <dt>TMP</dt><dd>37 mmHg</dd>
+          <dt>抗凝器</dt><dd>14.2 ml/h</dd>
+        </dl>
+      </div>
+      <p class="note">模型為示意，幫浦位置依這張照片排列；實際管路與設定以院內規範與機器顯示為準。</p>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const V = (x,y,z)=>new THREE.Vector3(x,y,z);
+
+/* ---------- parts, in blood-path order ---------- */
+const PARTS = [
+ {id:'pt',  n:'患者端（動脈出口）', en:'Access · arterial limb', c:'blood', a:V(-4.3,-2.4,2.0),
+  d:'雙腔導管的動脈端把血液引出體外。管路在機台上稱為紅色動脈端。', v:'血液出體'},
+ {id:'A',   n:'動脈壓感測 A', en:'Arterial pressure', c:'blood', a:V(-0.2,1.62,1.3),
+  d:'位在血液幫浦之前，測量抽血端的負壓。數值越負代表抽血越吃力，常見原因是導管位置或血塊。', v:'−110 mmHg'},
+ {id:'bp',  n:'血液幫浦（紅）', en:'Blood pump', c:'blood', a:V(-0.9,0.6,1.5),
+  d:'滾輪擠壓管路推動血液，決定整個體外循環的流速。', v:'Qb 150 ml/min'},
+ {id:'hep', n:'抗凝注射幫浦', en:'Heparin syringe pump', c:'hep', a:V(0,3.35,0.4),
+  d:'機頂的針筒幫浦，持續把抗凝劑打進血液幫浦後的管路，避免過濾器與管路凝血。', v:'14.2 ml/h'},
+ {id:'pre', n:'前稀釋幫浦（藍上）', en:'Pre-dilution pump', c:'fluid', a:V(0.9,0.6,1.5),
+  d:'把置換液加在過濾器「之前」。血液先被稀釋，濾器較不易阻塞，但清除效率略降。', v:'前稀釋 50%'},
+ {id:'flt', n:'血液過濾器', en:'Hemofilter', c:'blood', a:V(-2.65,0.5,1.4),
+  d:'中空纖維膜。血液走纖維內部，水分與中小分子在壓力差下穿過膜壁進入外殼，成為濾液（對流清除）。', v:'TMP 37 mmHg'},
+ {id:'P',   n:'濾液壓感測 P', en:'Filtrate pressure', c:'waste', a:V(-1.4,1.62,1.3),
+  d:'測量過濾器外殼側的壓力，與動、靜脈壓一起算出跨膜壓 TMP。TMP 上升代表膜逐漸阻塞。', v:'用於計算 TMP'},
+ {id:'ep',  n:'廢液幫浦（黃）', en:'Effluent pump', c:'waste', a:V(-0.9,-0.9,1.5),
+  d:'把濾液從過濾器抽出到廢液袋。抽出量 = 置換液量 + 淨脫水量，以此精確控制病人的體液平衡。', v:'≈ 2100 ml/h'},
+ {id:'bld', n:'漏血偵測器', en:'Blood leak detector', c:'waste', a:V(-0.9,-2.15,1.5),
+  d:'以光學方式監測濾液顏色。若過濾膜破損、紅血球漏到濾液側，會立即警報並停止。', v:'濾液應為淡黃清澈'},
+ {id:'bag', n:'置換液袋', en:'Replacement fluid', c:'fluid', a:V(3.7,0.6,0.2),
+  d:'無菌、成分接近血漿的電解質溶液，用來補回被濾掉的水分。', v:'2000 ml/h'},
+ {id:'htr', n:'置換液加熱器', en:'Fluid heater HF400', c:'fluid', a:V(0.75,-2.25,2.0),
+  d:'大量置換液直接輸入會讓病人失溫，置換液先繞過加熱器再分流到前、後稀釋幫浦。', v:'約 37 °C'},
+ {id:'post',n:'後稀釋幫浦（藍下）', en:'Post-dilution pump', c:'fluid', a:V(0.9,-0.9,1.5),
+  d:'把置換液加在過濾器「之後」、回到氣泡室。清除效率最好，但濾器內血液較濃，較易凝固。', v:'後稀釋 50%'},
+ {id:'V',   n:'靜脈壓 V／氣泡室', en:'Venous pressure · drip chamber', c:'blood', a:V(1.9,0.45,1.45),
+  d:'血液回體前先進入氣泡室，讓氣泡上浮分離，同時測量回血端壓力。壓力升高常見於回血端阻塞或凝血。', v:'54 mmHg'},
+ {id:'air', n:'空氣偵測器', en:'Air detector', c:'blood', a:V(1.9,-0.8,1.45),
+  d:'超音波感測回血管內是否有氣泡，是防止空氣栓塞的最後一道關卡。', v:'偵測到即停機'},
+ {id:'clp', n:'靜脈夾', en:'Venous clamp', c:'blood', a:V(1.9,-1.9,1.45),
+  d:'與空氣偵測器連動，一有警報立刻夾閉回血管。', v:'安全閥'},
+ {id:'ret', n:'患者端（靜脈回流）', en:'Access · venous limb', c:'blood', a:V(-4.3,-3.2,2.0),
+  d:'過濾後並補足置換液的血液，經導管靜脈端回到病人體內。', v:'血液回體'},
+];
+const COL = {blood:'--blood', fluid:'--fluid', waste:'--waste', hep:'--hep'};
+
+/* ---------- scene ---------- */
+const canvas = document.getElementById('c'), plate = document.getElementById('plate');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+camera.position.set(6.5, 3.2, 13);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = .08;
+controls.autoRotate = true; controls.autoRotateSpeed = .9;
+controls.minDistance = 6; controls.maxDistance = 24; controls.target.set(0,0.2,0);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduce) controls.autoRotate = false;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, .95));
+const sun = new THREE.DirectionalLight(0xffffff, .65); sun.position.set(5,8,9); scene.add(sun);
+
+const bodyMat = new THREE.MeshStandardMaterial({color:0xf4f6f7, roughness:.55, metalness:.05});
+const panelMat = new THREE.MeshStandardMaterial({color:0xe2e7ea, roughness:.7});
+const darkMat = new THREE.MeshStandardMaterial({color:0x2b3238, roughness:.5});
+const edgeMat = new THREE.LineBasicMaterial({color:0x1d2730, transparent:true, opacity:.35});
+const pickables = [];
+
+function add(geo, mat, pos, id, rot){
+  const m = new THREE.Mesh(geo, mat); m.position.copy(pos); if(rot) m.rotation.set(...rot);
+  const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat); m.add(e);
+  scene.add(m); if(id){ m.userData.id=id; pickables.push(m); } return m;
+}
+function rounded(w,h,d,r){
+  const s=new THREE.Shape(),x=-w/2,y=-h/2;
+  s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);
+  const g=new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:true,bevelSize:.06,bevelThickness:.06,bevelSegments:2});g.translate(0,0,-d/2);return g;
+}
+// cabinet + column
+add(rounded(4.6,6.6,2.2,.5), bodyMat, V(0,0,0));
+add(new THREE.BoxGeometry(1.4,1.6,1.4), bodyMat, V(0,-4.1,0));
+add(new THREE.BoxGeometry(3.2,.18,2.6), panelMat, V(0,-4.95,0));
+// front pump panel
+add(new THREE.BoxGeometry(3.9,3.9,.12), panelMat, V(0,-0.45,1.18));
+// screen
+const scr = add(new THREE.BoxGeometry(2.5,1.7,.1), darkMat, V(0,2.25,1.15), 'scr');
+const scrFace = new THREE.Mesh(new THREE.PlaneGeometry(2.3,1.5), new THREE.MeshBasicMaterial({color:0x8fb6e6}));
+scrFace.position.set(0,0,.06); scr.add(scrFace);
+// syringe
+add(new THREE.BoxGeometry(2.0,.35,.7), bodyMat, V(0,3.45,0.4), 'hep');
+const syr = add(new THREE.CylinderGeometry(.12,.12,1.5,20), new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:.6}), V(0.1,3.72,0.4), 'hep',[0,0,Math.PI/2]);
+const plunger = add(new THREE.BoxGeometry(.12,.5,.12), bodyMat, V(0.95,3.72,0.4), 'hep');
+// pumps
+const rotors = {};
+function pump(id, x, y, hex){
+  const g=new THREE.Group(); g.position.set(x,y,1.3); scene.add(g);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.14,40), panelMat); base.rotation.x=Math.PI/2; g.add(base);
+  const rotor=new THREE.Group(); rotor.position.z=.12; g.add(rotor);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.12,40), new THREE.MeshStandardMaterial({color:hex,roughness:.4})); hub.rotation.x=Math.PI/2; rotor.add(hub);
+  hub.add(new THREE.LineSegments(new THREE.EdgesGeometry(hub.geometry,30),edgeMat));
+  for(let k=0;k<2;k++){
+    const r=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.2,16), new THREE.MeshStandardMaterial({color:0xdde3e7,metalness:.4,roughness:.3}));
+    r.rotation.x=Math.PI/2; r.position.set(Math.cos(k*Math.PI)*.36,Math.sin(k*Math.PI)*.36,.1); rotor.add(r);
+  }
+  const arrow=new THREE.Mesh(new THREE.BoxGeometry(.38,.22,.02), new THREE.MeshBasicMaterial({color:0xffffff})); arrow.position.z=.09; rotor.add(arrow);
+  hub.userData.id=id; base.userData.id=id; pickables.push(hub,base);
+  rotors[id]=rotor;
+}
+pump('bp', -0.9, 0.6, 0xc4283a);
+pump('pre', 0.9, 0.6, 0x2a72c9);
+pump('ep', -0.9,-0.9, 0xd4a017);
+pump('post',0.9,-0.9, 0x2a72c9);
+// hemofilter
+const glass = new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:.35, roughness:.1});
+add(new THREE.CylinderGeometry(.26,.26,2.3,32,1,true), glass, V(-2.65,0.5,1.4), 'flt');
+add(new THREE.CylinderGeometry(.3,.3,.18,32), bodyMat, V(-2.65,1.72,1.4), 'flt');
+add(new THREE.CylinderGeometry(.3,.3,.18,32), bodyMat, V(-2.65,-0.72,1.4), 'flt');
+const fibers = new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,2.2,24), new THREE.MeshStandardMaterial({color:0xe8b8bf, roughness:.8}));
+fibers.position.set(-2.65,0.5,1.4); scene.add(fibers);
+add(new THREE.BoxGeometry(.25,.5,.3), panelMat, V(-2.65,0.5,1.05));
+// pressure ports
+[['P',-1.4],['A',-0.2],['V',1.4]].forEach(([id,x])=>add(new THREE.CylinderGeometry(.13,.13,.16,24), bodyMat, V(x,1.62,1.25), id,[Math.PI/2,0,0]));
+// drip chamber, air detector, clamp
+add(new THREE.CylinderGeometry(.13,.13,1.1,24), glass, V(1.9,0.45,1.45), 'V');
+const bloodLevel = new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.6,20), new THREE.MeshStandardMaterial({color:0x8e1a26}));
+bloodLevel.position.set(1.9,0.2,1.45); scene.add(bloodLevel);
+add(new THREE.BoxGeometry(.4,.45,.35), darkMat, V(1.9,-0.8,1.4), 'air');
+add(new THREE.BoxGeometry(.4,.45,.35), darkMat, V(1.9,-1.9,1.4), 'clp');
+add(new THREE.BoxGeometry(.45,.5,.35), darkMat, V(-0.9,-2.15,1.4), 'bld');
+// heater
+add(new THREE.CylinderGeometry(.75,.75,.9,48), new THREE.MeshStandardMaterial({color:0x3a4249,roughness:.6}), V(0.75,-2.25,1.6), 'htr',[Math.PI/2,0,0]);
+add(new THREE.CylinderGeometry(.77,.77,.12,48), bodyMat, V(0.75,-2.25,2.1), 'htr',[Math.PI/2,0,0]);
+// bags + waste jug + patient markers
+const bagMat = new THREE.MeshStandardMaterial({color:0xcfe2f7, transparent:true, opacity:.7, roughness:.3});
+add(new THREE.BoxGeometry(.9,1.4,.25), bagMat, V(3.7,0.6,0.2), 'bag');
+add(new THREE.CylinderGeometry(.03,.03,4.5,8), new THREE.MeshStandardMaterial({color:0xa9b3ba,metalness:.6}), V(3.7,-0.6,-0.2));
+add(new THREE.BoxGeometry(1.1,1.0,.8), new THREE.MeshStandardMaterial({color:0xf3e5c0, transparent:true, opacity:.75}), V(-1.7,-4.1,1.4), 'ep');
+const pmark = new THREE.Mesh(new THREE.SphereGeometry(.22,24,16), new THREE.MeshStandardMaterial({color:0xe9c3b0, roughness:.8}));
+pmark.position.set(-4.4,-2.8,2.0); pmark.userData.id='pt'; pickables.push(pmark); scene.add(pmark);
+
+/* ---------- flow paths ---------- */
+const P = {
+ artIn:   [[-4.3,-2.6,2],[-3.6,-2.0,1.8],[-1.8,0.2,1.55],[-0.2,1.5,1.35],[-0.45,1.15,1.5],[-1.35,1.0,1.5],[-1.55,0.4,1.5],[-1.05,-0.05,1.5],[-0.35,0.35,1.5],[-0.6,1.25,1.55],[-1.8,1.95,1.5],[-2.65,1.95,1.4],[-2.65,1.72,1.4]],
+ filter:  [[-2.65,1.7,1.4],[-2.65,-0.7,1.4]],
+ venOut:  [[-2.65,-0.75,1.4],[-2.65,-1.2,1.55],[-2.0,-1.4,1.75],[0.0,-0.15,1.8],[1.4,1.5,1.55],[1.9,1.25,1.45],[1.9,0.0,1.45],[1.9,-0.8,1.45],[1.9,-1.9,1.45],[1.9,-2.9,1.6],[0.6,-3.5,2.0],[-2.5,-3.4,2.1],[-4.3,-3.2,2.0]],
+ fluidIn: [[3.7,-0.1,0.25],[3.2,-1.6,1.1],[1.8,-2.3,2.2],[0.75,-3.0,2.2],[-0.1,-2.3,2.2],[0.1,-1.55,1.8]],
+ fluidPre:[[0.1,-1.55,1.8],[0.25,0.0,1.55],[0.3,0.55,1.5],[0.55,1.15,1.5],[1.4,1.0,1.5],[1.55,0.35,1.5],[1.1,-0.05,1.5],[0.6,1.6,1.55],[-0.8,2.05,1.55],[-1.8,1.98,1.5]],
+ fluidPost:[[0.1,-1.55,1.8],[0.3,-0.9,1.5],[0.6,-0.35,1.5],[1.45,-0.55,1.5],[1.6,-1.2,1.5],[2.3,-0.3,1.55],[2.3,1.1,1.55],[1.9,1.1,1.45]],
+ waste:   [[-2.4,1.2,1.4],[-1.9,1.5,1.4],[-1.4,1.5,1.35],[-1.75,0.2,1.55],[-1.55,-0.6,1.5],[-1.2,-1.45,1.5],[-0.35,-1.05,1.5],[-0.6,-1.6,1.5],[-0.9,-2.15,1.5],[-1.1,-3.0,1.5],[-1.7,-3.6,1.4]],
+ hep:     [[-0.65,3.72,0.4],[-1.3,3.5,0.9],[-1.9,2.6,1.4],[-1.8,2.0,1.5]],
+};
+const LAYER = {artIn:'blood',filter:'blood',venOut:'blood',fluidIn:'fluid',fluidPre:'fluid',fluidPost:'fluid',waste:'waste',hep:'hep'};
+const SPEED = {artIn:.05,filter:.12,venOut:.045,fluidIn:.05,fluidPre:.06,fluidPost:.06,waste:.05,hep:.04};
+const flows = [];
+const layerObjs = {blood:[],fluid:[],waste:[],hep:[]};
+const sphere = new THREE.SphereGeometry(.055,10,8);
+Object.entries(P).forEach(([k,pts])=>{
+  const curve = new THREE.CatmullRomCurve3(pts.map(p=>V(...p)), false, 'catmullrom', .3);
+  const layer = LAYER[k];
+  const tubeMat = new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:.38, roughness:.2});
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 180, .05, 8, false), tubeMat);
+  if(k!=='filter') scene.add(tube);
+  const n = Math.max(8, Math.round(curve.getLength()*7));
+  const dotMat = new THREE.MeshBasicMaterial({color:0xffffff});
+  const inst = new THREE.InstancedMesh(sphere, dotMat, n); scene.add(inst);
+  const f = {curve, inst, n, speed:SPEED[k], layer, dotMat, tubeMat};
+  flows.push(f); layerObjs[layer].push(tube, inst);
+});
+function applyColors(){
+  flows.forEach(f=>{ const c=new THREE.Color(css(COL[f.layer])); f.dotMat.color.copy(c); f.tubeMat.color.copy(c).lerp(new THREE.Color(0xffffff), .65); });
+  edgeMat.color.set(css('--ink'));
+}
+applyColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyColors);
+new MutationObserver(applyColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- focus ring ---------- */
+const ring = new THREE.Mesh(new THREE.RingGeometry(.42,.48,48), new THREE.MeshBasicMaterial({color:0xc4283a, transparent:true, opacity:.9, side:THREE.DoubleSide, depthTest:false}));
+ring.renderOrder = 10; ring.visible=false; scene.add(ring);
+
+/* ---------- UI ---------- */
+const labelsEl = document.getElementById('labels'), listEl = document.getElementById('list'), detail = document.getElementById('detail');
+const tags = {};
+PARTS.forEach((p,i)=>{
+  const t=document.createElement('div'); t.className='tag'; t.tabIndex=0; t.setAttribute('role','button');
+  t.innerHTML=`<b>${i+1}</b><span>${p.n}</span>`; t.onclick=()=>select(p.id,true);
+  t.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(p.id,true);}};
+  labelsEl.appendChild(t); tags[p.id]=t;
+  const li=document.createElement('li');
+  li.innerHTML=`<button class="part" data-id="${p.id}" style="--c:var(${COL[p.c]})"><b>${String(i+1).padStart(2,'0')}</b><span>${p.n}</span><em></em></button>`;
+  listEl.appendChild(li);
+});
+listEl.addEventListener('click',e=>{const b=e.target.closest('.part'); if(b) select(b.dataset.id,true);});
+
+let current=null, camTween=null;
+function select(id, move){
+  if(id==='scr'){ detail.innerHTML=`<div class="eyebrow">Control</div><h3>觸控螢幕</h3><div class="en">CVVH · 血液過濾 · 療程視窗</div><p>顯示血液流速、超濾量、三個壓力表與療程時間。照片上療程已進行 6:22，置換液袋 3 分鐘後更換。</p><span class="val">已執行 6:22</span>`; return; }
+  const p = PARTS.find(x=>x.id===id); if(!p) return;
+  current=p;
+  Object.values(tags).forEach(t=>t.classList.remove('on')); tags[id].classList.add('on');
+  listEl.querySelectorAll('.part').forEach(b=>b.classList.toggle('on', b.dataset.id===id));
+  const i = PARTS.indexOf(p)+1;
+  detail.innerHTML=`<div class="eyebrow">No. ${String(i).padStart(2,'0')} · ${({blood:'血液路線',fluid:'置換液路線',waste:'廢液路線',hep:'抗凝路線'})[p.c]}</div><h3>${p.n}</h3><div class="en">${p.en}</div><p>${p.d}</p><span class="val">${p.v}</span>`;
+  ring.visible=true; ring.position.copy(p.a); ring.material.color.set(css(COL[p.c]));
+  if(move){
+    const target=p.a.clone(); const dir=V(p.a.x*.25,0.35,1).normalize();
+    camTween={t:0, fromP:camera.position.clone(), toP:target.clone().add(dir.multiplyScalar(9)), fromT:controls.target.clone(), toT:target.clone().lerp(V(0,0.2,0),.35)};
+    setSpin(false);
+  }
+}
+
+const spinBtn=document.getElementById('spin');
+function setSpin(on){ controls.autoRotate=on; spinBtn.setAttribute('aria-pressed', on); }
+spinBtn.onclick=()=>setSpin(!controls.autoRotate);
+if(reduce) setSpin(false);
+document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{
+  const on=b.getAttribute('aria-pressed')!=='true'; b.setAttribute('aria-pressed',on);
+  layerObjs[b.dataset.layer].forEach(o=>o.visible=on);
+});
+
+// picking
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(); let down=null;
+canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
+canvas.addEventListener('pointerup',e=>{
+  if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5) return;
+  const r=canvas.getBoundingClientRect(); mouse.set((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,camera); const hit=ray.intersectObjects(pickables,false)[0];
+  if(hit) select(hit.object.userData.id,false);
+});
+controls.addEventListener('start',()=>{camTween=null;});
+
+/* ---------- loop ---------- */
+function resize(){ const w=plate.clientWidth,h=plate.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h;
+  camera.position.z = w<600 ? Math.max(camera.position.z,15) : camera.position.z; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(plate); resize();
+
+const m4=new THREE.Matrix4(), tmp=new THREE.Vector3(), camDir=new THREE.Vector3();
+const clock=new THREE.Clock(); let time=0;
+const RPM={bp:1.6,pre:.7,ep:1.1,post:.7};
+function frame(){
+  const dt=Math.min(clock.getDelta(),.05); const flowRate = reduce?.25:1; time+=dt*flowRate;
+  flows.forEach(f=>{ for(let i=0;i<f.n;i++){ const t=((i/f.n)+time*f.speed)%1; f.curve.getPointAt(t,tmp); m4.makeTranslation(tmp.x,tmp.y,tmp.z); f.inst.setMatrixAt(i,m4);} f.inst.instanceMatrix.needsUpdate=true; });
+  Object.entries(rotors).forEach(([k,r])=>r.rotation.z+=dt*RPM[k]*flowRate*2.2);
+  plunger.position.x = 0.95 - ((time*.02)%0.8);
+  if(camTween){ camTween.t=Math.min(1,camTween.t+dt*1.4); const e=1-Math.pow(1-camTween.t,3);
+    camera.position.lerpVectors(camTween.fromP,camTween.toP,e); controls.target.lerpVectors(camTween.fromT,camTween.toT,e); if(camTween.t>=1) camTween=null; }
+  controls.update();
+  if(ring.visible){ ring.quaternion.copy(camera.quaternion); const s=1+Math.sin(performance.now()/300)*.08; ring.scale.set(s,s,s); }
+  // labels
+  const w=plate.clientWidth,h=plate.clientHeight;
+  camera.getWorldDirection(camDir);
+  PARTS.forEach(p=>{
+    const t=tags[p.id]; tmp.copy(p.a).project(camera);
+    const toCam=camera.position.clone().sub(p.a).normalize();
+    const facing = p.a.z>0.6 ? toCam.z : 1;
+    const vis = tmp.z<1 && Math.abs(tmp.x)<1.05 && Math.abs(tmp.y)<1.05;
+    t.style.transform=`translate(${(tmp.x*.5+.5)*w}px,${(-tmp.y*.5+.5)*h}px) translate(-10px,-50%)`;
+    t.style.opacity = !vis ? 0 : facing< -0.05 ? .12 : (current&&current.id!==p.id ? .75 : 1);
+  });
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+select('bp',false);
+frame();
+})();
+</script>

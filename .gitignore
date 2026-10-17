@@ -1,0 +1,4 @@
+video/frames/
+video/sound.wav
+dist/
+__pycache__/

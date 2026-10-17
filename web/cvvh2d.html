@@ -1,0 +1,384 @@
+<title>CVVH 管路圖鑑</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one wide schematic plate (textbook circuit diagram), detail + index + settings below in a 3-column strip */
+:root{
+  --bg:#eef1f3; --plate:#fbfcfd; --ink:#1d2730; --muted:#66727d; --rule:#d3dae0; --grid:#e6ebef;
+  --blood:#c4283a; --blood-t:#f3d3d7; --waste:#c08410; --waste-t:#f4e4c2;
+  --fluid:#2a72c9; --fluid-t:#d3e3f6; --hep:#7a4fc0; --hep-t:#e3d9f3;
+  --metal:#dfe5ea; --dark:#34404a;
+  --f-display:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171c;--plate:#172028;--ink:#e3e9ee;--muted:#8d9aa5;--rule:#2c3740;--grid:#1e2830;
+  --blood:#ef5566;--blood-t:#4a2229;--waste:#e6a93a;--waste-t:#45371b;
+  --fluid:#62a3f0;--fluid-t:#1d3550;--hep:#a888e8;--hep-t:#33284a;--metal:#2a343d;--dark:#0e1317;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171c;--plate:#172028;--ink:#e3e9ee;--muted:#8d9aa5;--rule:#2c3740;--grid:#1e2830;
+  --blood:#ef5566;--blood-t:#4a2229;--waste:#e6a93a;--waste-t:#45371b;
+  --fluid:#62a3f0;--fluid-t:#1d3550;--hep:#a888e8;--hep-t:#33284a;--metal:#2a343d;--dark:#0e1317;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px;border-bottom:1px solid var(--rule);padding-bottom:12px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:900;font-size:clamp(24px,4vw,38px);line-height:1.15;margin:4px 0 0;text-wrap:balance}
+.sub{color:var(--muted);font-size:14px;max-width:44ch;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font:500 12px var(--f-body);display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--rule);background:var(--plate);color:var(--ink);cursor:pointer}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.chip[aria-pressed="false"]{color:var(--muted)}
+.chip[aria-pressed="false"] i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+.chip:focus-visible,.part:focus-visible,.hit:focus-visible{outline:2px solid var(--fluid);outline-offset:2px}
+.spacer{flex:1}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--plate);-webkit-overflow-scrolling:touch}
+#svg{display:block;width:100%;min-width:860px;height:auto}
+.swipe{display:none;font:11px var(--f-mono);color:var(--muted);letter-spacing:.06em}
+@media (max-width:880px){.swipe{display:block}}
+.below{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
+@media (max-width:900px){.below{grid-template-columns:1fr}}
+.card{background:var(--plate);border:1px solid var(--rule);border-radius:4px;padding:14px 16px;min-width:0}
+.card h2{font-family:var(--f-display);font-size:16px;margin:0 0 8px;font-weight:600}
+.detail h3{font-family:var(--f-display);font-size:21px;margin:2px 0 2px}
+.detail .en{font:12px var(--f-mono);color:var(--muted)}
+.detail p{margin:8px 0 0;font-size:14px;max-width:60ch}
+.detail .val{margin-top:10px;font:500 13px var(--f-mono);display:inline-block;padding:3px 8px;border-radius:3px;background:var(--bg)}
+.list{display:grid;gap:1px;margin:0;padding:0;list-style:none;columns:1}
+.part{display:grid;grid-template-columns:24px 1fr 8px;gap:8px;align-items:center;width:100%;text-align:left;font:13.5px var(--f-body);color:var(--ink);background:none;border:0;padding:4px 6px;border-radius:3px;cursor:pointer}
+.part:hover,.part.on{background:var(--bg)}
+.part.on{font-weight:700}
+.part b{font:500 11px var(--f-mono);color:var(--muted)}
+.part em{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.readout{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px;margin:0}
+.readout dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.readout dt{color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:10px 0 0}
+
+/* ---- SVG ---- */
+svg text{font-family:var(--f-body);fill:var(--ink)}
+.t-name{font-size:13px;font-weight:700}
+.t-en{font-size:9.5px;font-family:var(--f-mono);fill:var(--muted);letter-spacing:.04em}
+.t-val{font-size:11px;font-family:var(--f-mono);font-weight:500}
+.t-num{font-size:10px;font-family:var(--f-mono);fill:var(--plate);font-weight:500}
+.t-zone{font-size:10px;font-family:var(--f-mono);fill:var(--muted);letter-spacing:.16em}
+.num{fill:var(--ink)}
+.line{fill:none;stroke:var(--ink);stroke-width:1.2}
+.thin{fill:none;stroke:var(--muted);stroke-width:.8}
+.lead{fill:none;stroke:var(--muted);stroke-width:.7;stroke-dasharray:2 2}
+.body{fill:var(--plate);stroke:var(--ink);stroke-width:1.4}
+.metal{fill:var(--metal);stroke:var(--ink);stroke-width:1.2}
+.dark{fill:var(--dark);stroke:var(--ink);stroke-width:1.2}
+.glass{fill:var(--plate);fill-opacity:.55;stroke:var(--ink);stroke-width:1.3}
+.tube{fill:none;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.tube-o{fill:none;stroke-width:13;stroke-linecap:round;stroke-linejoin:round;stroke:var(--ink);stroke-opacity:.55}
+.flow{fill:none;stroke-width:5.5;stroke-linecap:round;stroke-dasharray:.1 13}
+.blood .tube{stroke:var(--blood-t)} .blood .flow{stroke:var(--blood)}
+.fluid .tube{stroke:var(--fluid-t)} .fluid .flow{stroke:var(--fluid)}
+.waste .tube{stroke:var(--waste-t)} .waste .flow{stroke:var(--waste)}
+.hep .tube{stroke:var(--hep-t)} .hep .flow{stroke:var(--hep)}
+.fBlood{fill:var(--blood)} .fFluid{fill:var(--fluid)} .fWaste{fill:var(--waste)} .fHep{fill:var(--hep)}
+.tBlood{fill:var(--blood-t)} .tFluid{fill:var(--fluid-t)} .tWaste{fill:var(--waste-t)}
+.sBlood{stroke:var(--blood)} .sFluid{stroke:var(--fluid)} .sWaste{stroke:var(--waste)}
+.layer-off{opacity:.08}
+.hit{cursor:pointer}
+.hit .halo{fill:none;stroke:var(--blood);stroke-width:2;opacity:0;stroke-dasharray:4 3}
+.hit.on .halo{opacity:1}
+.hit.on .num{fill:var(--blood)}
+.hit:hover .halo{opacity:.5}
+.zone{fill:none;stroke:var(--rule);stroke-width:1;stroke-dasharray:5 4}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Plate 02 · Infomed HF440 · CVVH circuit</div>
+      <h1>CVVH 體外循環管路圖</h1>
+    </div>
+    <p class="sub">四條路線同時在流動。點任何構造看說明；可以單獨開關某條路線。</p>
+  </header>
+
+  <div class="bar">
+    <button class="chip" data-layer="blood" aria-pressed="true" style="--c:var(--blood)"><i></i>血液</button>
+    <button class="chip" data-layer="fluid" aria-pressed="true" style="--c:var(--fluid)"><i></i>置換液</button>
+    <button class="chip" data-layer="waste" aria-pressed="true" style="--c:var(--waste)"><i></i>廢液（濾液）</button>
+    <button class="chip" data-layer="hep" aria-pressed="true" style="--c:var(--hep)"><i></i>抗凝</button>
+    <span class="spacer"></span>
+    <span class="swipe">← 左右滑動 →</span>
+    <button class="chip" id="play" aria-pressed="true" style="--c:var(--ink)"><i></i>流動中</button>
+  </div>
+
+  <div class="scroll"><svg id="svg" viewBox="0 0 980 720" role="img" aria-label="CVVH 體外循環管路示意圖"></svg></div>
+
+  <div class="below">
+    <div class="card detail" id="detail" aria-live="polite"></div>
+    <div class="card"><h2>構造索引（依血流順序）</h2><ul class="list" id="list"></ul></div>
+    <div class="card">
+      <h2>照片上的設定</h2>
+      <dl class="readout">
+        <dt>血液流速 Qb</dt><dd>150 ml/min</dd>
+        <dt>置換液 Qr</dt><dd>2000 ml/h</dd>
+        <dt>　前稀釋 50%</dt><dd>1000 ml/h</dd>
+        <dt>　後稀釋 50%</dt><dd>1000 ml/h</dd>
+        <dt>體液減輕（淨脫水）</dt><dd>100 ml/h</dd>
+        <dt>廢液 = 置換 + 脫水</dt><dd>2100 ml/h</dd>
+        <dt>動脈壓 / 靜脈壓</dt><dd>−110 / 54 mmHg</dd>
+        <dt>TMP</dt><dd>37 mmHg</dd>
+        <dt>抗凝器</dt><dd>14.2 ml/h</dd>
+      </dl>
+      <p class="note">示意圖；幫浦角色依照片位置判讀，實際管路與設定以院內規範及機器顯示為準。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const svg = document.getElementById('svg');
+const PARTS = [
+ {id:'pt',  n:'患者・雙腔導管', en:'Patient · double-lumen catheter', c:'blood', v:'動脈端出 / 靜脈端回',
+  d:'雙腔導管一腔把血引出（動脈端），另一腔把處理過的血送回（靜脈端）。兩個開口錯開，避免剛回去的血又被抽出來（再循環）。'},
+ {id:'A',   n:'動脈壓 A', en:'Arterial pressure', c:'blood', v:'−110 mmHg',
+  d:'在血液幫浦「之前」，量的是抽血端負壓。越負代表抽血越吃力：導管貼壁、扭折、血塊或病人姿勢都會造成。'},
+ {id:'bp',  n:'血液幫浦', en:'Blood pump · roller', short:'Blood pump', c:'blood', v:'Qb 150 ml/min',
+  d:'兩個滾輪交替擠壓幫浦管段，把血往前推。轉速決定整個體外循環的血流量 Qb。'},
+ {id:'hep', n:'抗凝注射幫浦', en:'Heparin syringe pump', c:'hep', v:'14.2 ml/h',
+  d:'機頂的針筒幫浦，把抗凝劑持續注入血液幫浦之後（正壓段）的管路，讓過濾器與管路不凝血。'},
+ {id:'pre', n:'前稀釋幫浦', en:'Pre-dilution pump', c:'fluid', v:'1000 ml/h',
+  d:'置換液在過濾器「之前」加入血中。血先被稀釋，濾器不易阻塞、壽命較長；代價是進入濾器的溶質濃度降低，清除效率稍差。'},
+ {id:'flt', n:'血液過濾器', en:'Hemofilter · hollow fibre', short:'Hemofilter', c:'blood', v:'TMP 37 mmHg',
+  d:'數千根中空纖維。血液走纖維內腔，跨膜壓把水分連同中小分子一起推過膜壁到外殼側，這就是「對流」清除。CVVH 只有這一種機轉，不用透析液。'},
+ {id:'P',   n:'濾液壓 P', en:'Filtrate pressure', c:'waste', v:'計算 TMP',
+  d:'量過濾器外殼側的壓力。TMP ≈（濾器前壓 + 靜脈壓）/2 − 濾液壓。TMP 逐漸上升表示膜在阻塞，濾器快要換了。'},
+ {id:'bld', n:'漏血偵測器', en:'Blood leak detector', short:'Blood leak det.', c:'waste', v:'濾液應清澈淡黃',
+  d:'光學感測濾液的透光度。膜破裂讓紅血球漏到濾液側時，濾液變粉紅，機器立即警報並停泵。'},
+ {id:'ep',  n:'廢液幫浦', en:'Effluent pump', c:'waste', v:'≈ 2100 ml/h',
+  d:'控制從濾器抽出多少液體。抽出量 = 置換液量 + 淨脫水量，兩者由秤或幫浦精準平衡，病人實際只少掉設定的脫水量。'},
+ {id:'wst', n:'廢液袋', en:'Effluent bag', c:'waste', v:'定時更換',
+  d:'收集濾液。顏色與量是重要觀察：粉紅色要想到漏血，混濁要想到感染或其他問題。'},
+ {id:'bag', n:'置換液袋', en:'Replacement fluid', c:'fluid', v:'2000 ml/h',
+  d:'無菌、成分接近血漿的電解質溶液（常為含碳酸氫根的配方），補回被濾掉的水分並校正電解質與酸鹼。'},
+ {id:'htr', n:'置換液加熱器', en:'Fluid heater', c:'fluid', v:'約 37 °C',
+  d:'每小時兩公升的室溫液體直接輸入會讓病人失溫。管路在加熱板上繞行後，再分流到前、後稀釋幫浦。'},
+ {id:'post',n:'後稀釋幫浦', en:'Post-dilution pump', c:'fluid', v:'1000 ml/h',
+  d:'置換液在過濾器「之後」加入，送進氣泡室。清除效率最高，但濾器內血液被濃縮（濾過分率高），較容易凝固。'},
+ {id:'V',   n:'氣泡室・靜脈壓 V', en:'Venous drip chamber', c:'blood', v:'54 mmHg',
+  d:'回體前讓血液在小腔室裡停一下，氣泡上浮到液面上方分離；上方接壓力管量回血端壓力。升高常見於回血端阻塞或氣泡室凝血。'},
+ {id:'air', n:'空氣偵測器', en:'Ultrasonic air detector', c:'blood', v:'偵測到即停機',
+  d:'超音波穿過回血管，一偵測到氣泡或微泡就警報，是防止空氣栓塞的最後一道關卡。'},
+ {id:'clp', n:'靜脈夾', en:'Venous line clamp', c:'blood', v:'與空氣偵測連動',
+  d:'空氣偵測或其他重大警報時立刻夾閉回血管，同時血液幫浦停止，確保不會有氣泡進入病人。'},
+];
+const IDX = Object.fromEntries(PARTS.map((p,i)=>[p.id,i+1]));
+const LAYER = {blood:'blood',fluid:'fluid',waste:'waste',hep:'hep'};
+
+/* ---------- helpers ---------- */
+const anim = (dur, dist=-26.2) => `<animate attributeName="stroke-dashoffset" from="0" to="${dist}" dur="${dur}s" repeatCount="indefinite"/>`;
+function route(layer, d, dur){
+  return `<g class="${layer} lay" data-layer="${layer}"><path class="tube-o" d="${d}"/><path class="tube" d="${d}"/><path class="flow" d="${d}">${anim(dur)}</path></g>`;
+}
+function num(id, x, y){ return `<circle class="num" cx="${x}" cy="${y}" r="9"/><text class="t-num" x="${x}" y="${y+3.5}" text-anchor="middle">${IDX[id]}</text>`; }
+function label(id, x, y, anchor='start'){
+  const p = PARTS[IDX[id]-1];
+  const tx = anchor==='end' ? x-14 : x+14;
+  return `${num(id,x,y)}<text class="t-name" x="${tx}" y="${y+1}" text-anchor="${anchor}">${p.n}</text><text class="t-en" x="${tx}" y="${y+14}" text-anchor="${anchor}">${p.short||p.en}</text>`;
+}
+function hit(id, inner, halo){ // halo: [x,y,w,h]
+  const [x,y,w,h]=halo;
+  return `<g class="hit" data-id="${id}" tabindex="0" role="button" aria-label="${PARTS[IDX[id]-1].n}"><rect class="halo" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/>${inner}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="transparent"/></g>`;
+}
+// roller pump: tube runs through along direction (h or v); draws housing, U-raceway, rotating rotor
+function pump(id, cx, cy, cls, dur, ring){
+  const r=36;
+  return `<g>
+    <circle cx="${cx}" cy="${cy}" r="${r+6}" class="metal"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--plate)" stroke="var(--ink)" stroke-width="1"/>
+    <circle cx="${cx}" cy="${cy}" r="${r-8}" fill="none" class="${ring}" stroke-width="7" stroke-opacity=".9"/>
+    <g>
+      <circle cx="${cx}" cy="${cy}" r="12" class="${cls}" stroke="var(--ink)" stroke-width="1"/>
+      <line x1="${cx}" y1="${cy-26}" x2="${cx}" y2="${cy+26}" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy-26}" r="6" class="metal"/><circle cx="${cx}" cy="${cy+26}" r="6" class="metal"/>
+      <circle cx="${cx}" cy="${cy}" r="3" fill="var(--plate)"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>
+    </g></g>`;
+}
+function gauge(cx, cy, val, ang){
+  const a=(ang-90)*Math.PI/180, x2=cx+Math.cos(a)*11, y2=cy+Math.sin(a)*11;
+  return `<circle cx="${cx}" cy="${cy}" r="16" class="body"/>
+    <path d="M${cx-11} ${cy+6} A12 12 0 1 1 ${cx+11} ${cy+6}" class="thin"/>
+    <line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--blood)" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="2" fill="var(--ink)"/>
+    <text class="t-val" x="${cx}" y="${cy-22}" text-anchor="middle">${val}</text>`;
+}
+
+/* ---------- route geometry ---------- */
+const R = {
+  art:  'M92 350 C92 226 112 130 196 130 L540 130 C584 130 600 150 600 190',
+  ven:  'M600 532 C600 592 586 620 548 620 L132 620 C100 620 92 566 92 400',
+  repl: 'M240 368 L240 412 C240 426 250 430 264 430 L294 430',
+  pre:  'M372 430 L398 430 C440 430 470 416 470 382 L470 136',
+  post: 'M372 430 L398 430 C440 430 470 444 470 478 L470 612',
+  eff:  'M636 252 L760 252 C806 252 830 276 830 318 L830 520 C830 560 852 572 890 578',
+  hep:  'M386 52 C404 52 400 78 400 124',
+};
+
+/* ---------- build ---------- */
+let s = `
+<defs>
+  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern>
+  <clipPath id="fclip"><rect x="567" y="206" width="66" height="320" rx="6"/></clipPath>
+  <clipPath id="dclip"><rect x="377" y="574" width="26" height="78" rx="10"/></clipPath>
+  <clipPath id="wclip"><path d="M870 584 h70 a8 8 0 0 1 8 8 v92 a18 18 0 0 1 -18 18 h-50 a18 18 0 0 1 -18 -18 v-92 a8 8 0 0 1 8 -8z"/></clipPath>
+  <clipPath id="bclip"><path d="M208 252 h64 a6 6 0 0 1 6 6 v90 a20 20 0 0 1 -20 20 h-32 a20 20 0 0 1 -20 -20 v-90 a6 6 0 0 1 6 -6z"/></clipPath>
+</defs>
+<rect width="980" height="720" fill="url(#grid)"/>
+<rect x="190" y="230" width="320" height="270" rx="10" class="zone"/>
+<text class="t-zone" x="300" y="250">REPLACEMENT</text>
+<text class="t-zone" x="112" y="116">ARTERIAL →</text>
+<text class="t-zone" x="140" y="654">← VENOUS LIMB · 靜脈端</text>
+<text class="t-zone" x="660" y="282">FILTRATE · 濾液 →</text>
+`;
+// routes (drawn under components)
+s += route('fluid', R.repl, 1.6) + route('fluid', R.pre, 1.7) + route('fluid', R.post, 1.7);
+s += route('blood', R.art, 1.0) + route('blood', R.ven, 1.0);
+s += route('waste', R.eff, 1.4) + route('hep', R.hep, 4);
+// join nodes
+s += `<circle cx="400" cy="130" r="5" class="fHep" stroke="var(--plate)" stroke-width="2"/><circle cx="470" cy="130" r="5" class="fFluid" stroke="var(--plate)" stroke-width="2"/><circle cx="470" cy="620" r="5" class="fFluid" stroke="var(--plate)" stroke-width="2"/><circle cx="385" cy="430" r="4" class="fFluid"/>`;
+s += `<text class="t-en" x="408" y="152">肝素注入點</text><text class="t-en" x="478" y="152">前稀釋注入點</text><text class="t-en" x="478" y="642">後稀釋注入點</text>`;
+
+// 1 patient
+s += hit('pt', `
+  <rect x="34" y="290" width="116" height="170" rx="40" class="body"/>
+  <rect x="80" y="344" width="24" height="62" rx="8" class="metal"/>
+  <rect x="84" y="348" width="7" height="54" rx="3" class="fBlood"/><rect x="93" y="348" width="7" height="54" rx="3" class="fBlood" opacity=".45"/>
+  <text class="t-en" x="74" y="358" text-anchor="end">出</text><text class="t-en" x="74" y="402" text-anchor="end">回</text>
+  ${num('pt',92,318)}
+  <text class="t-name" x="92" y="432" text-anchor="middle">患者</text>
+  <text class="t-en" x="92" y="446" text-anchor="middle">雙腔導管</text>
+`, [26,282,132,186]);
+// 2 A transducer
+s += hit('A', `<line x1="230" y1="130" x2="230" y2="92" class="line"/>${gauge(230,80,'−110',-60)}${label('A',196,52,'end')}`, [100,28,150,112]);
+// 3 blood pump
+s += hit('bp', `${pump('bp',310,130,'fBlood',1.6,'sBlood')}${label('bp',196,198)}`, [186,82,170,140]);
+// 4 heparin syringe
+s += hit('hep', `
+  <rect x="290" y="40" width="88" height="24" rx="4" class="glass"/>
+  <rect x="292" y="43" width="64" height="18" rx="2" class="fHep" opacity=".55"><animate attributeName="width" values="64;30;64" dur="40s" repeatCount="indefinite"/></rect>
+  <rect x="270" y="46" width="22" height="12" class="metal"><animate attributeName="x" values="270;304;270" dur="40s" repeatCount="indefinite"/></rect>
+  <rect x="378" y="48" width="8" height="8" class="metal"/>
+  ${[310,322,334,346,358].map(x=>`<line x1="${x}" y1="40" x2="${x}" y2="46" class="thin"/>`).join('')}
+  ${label('hep',412,28)}`, [262,10,250,64]);
+// 5 pre pump (vertical tube)
+s += hit('pre', `${pump('pre',470,290,'fFluid',2.6,'sFluid')}${label('pre',448,200,'end')}`, [340,184,176,156]);
+// 13 post pump
+s += hit('post', `${pump('post',470,530,'fFluid',2.6,'sFluid')}${label('post',496,590)}`, [426,486,180,124]);
+// 11 replacement bag
+s += hit('bag', `
+  <line x1="240" y1="236" x2="240" y2="252" class="line"/><circle cx="240" cy="234" r="4" class="body"/>
+  <path d="M208 252 h64 a6 6 0 0 1 6 6 v90 a20 20 0 0 1 -20 20 h-32 a20 20 0 0 1 -20 -20 v-90 a6 6 0 0 1 6 -6z" class="glass"/>
+  <g clip-path="url(#bclip)"><rect x="200" y="290" width="90" height="90" class="tFluid"><animate attributeName="y" values="282;318;282" dur="30s" repeatCount="indefinite"/></rect></g>
+  <path d="M208 252 h64 a6 6 0 0 1 6 6 v90 a20 20 0 0 1 -20 20 h-32 a20 20 0 0 1 -20 -20 v-90 a6 6 0 0 1 6 -6z" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+  ${[280,300,320,340].map(y=>`<line x1="262" y1="${y}" x2="272" y2="${y}" class="thin"/>`).join('')}
+  <rect x="234" y="366" width="12" height="8" class="metal"/>
+  <text class="t-val" x="240" y="316" text-anchor="middle">5 L</text>
+  ${label('bag',202,476)}`, [196,226,112,270]);
+// 12 heater
+s += hit('htr', `
+  <rect x="294" y="396" width="78" height="68" rx="8" class="dark"/>
+  <rect x="300" y="402" width="66" height="56" rx="5" fill="var(--waste-t)" opacity=".55"/>
+  <path d="M300 430 h8 q6 -20 12 0 q6 20 12 0 q6 -20 12 0 q6 20 12 0 h10" fill="none" class="sFluid" stroke-width="3.5" stroke-linecap="round"/>
+  ${[314,333,352].map(x=>`<path d="M${x} 392 q-4 -6 0 -12 q4 -6 0 -12" class="thin" stroke="var(--waste)"><animate attributeName="opacity" values=".2;1;.2" dur="2s" begin="${(x-314)/40}s" repeatCount="indefinite"/></path>`).join('')}
+  <text class="t-val" x="333" y="478" text-anchor="middle" style="fill:var(--waste)">37 °C</text>
+  ${label('htr',300,346)}`, [286,330,150,160]);
+// 6 hemofilter
+const fibers = [576,585,594,603,612,621].map(x=>`<line x1="${x}" y1="214" x2="${x}" y2="518" stroke="var(--blood)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray=".1 11" opacity=".9">${anim(1.3,-22.2)}</line>`).join('');
+const fiberWalls = [576,585,594,603,612,621].map(x=>`<line x1="${x}" y1="212" x2="${x}" y2="520" stroke="var(--blood-t)" stroke-width="6"/>`).join('');
+const drops = Array.from({length:9},(_,i)=>{const y=232+i*32, d=(i*0.37)%2;
+  return `<circle cx="604" cy="${y}" r="2.2" class="fWaste"><animate attributeName="cx" values="604;630" dur="2s" begin="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="2s" begin="${d}s" repeatCount="indefinite"/></circle>`;}).join('');
+s += hit('flt', `
+  <rect x="567" y="206" width="66" height="320" rx="6" fill="var(--waste-t)" fill-opacity=".45" stroke="none"/>
+  <g clip-path="url(#fclip)">${fiberWalls}${fibers}${drops}</g>
+  <rect x="567" y="206" width="66" height="320" rx="6" class="glass" fill="none"/>
+  <path d="M562 206 h76 v-10 a6 6 0 0 0 -6 -6 h-64 a6 6 0 0 0 -6 6z" class="body"/>
+  <path d="M562 526 h76 v10 a6 6 0 0 1 -6 6 h-64 a6 6 0 0 1 -6 -6z" class="body"/>
+  <rect x="633" y="244" width="10" height="16" rx="2" class="metal"/>
+  <rect x="633" y="452" width="10" height="16" rx="2" class="metal"/><line x1="643" y1="452" x2="643" y2="468" stroke="var(--ink)" stroke-width="3"/>
+  <text class="t-en" x="650" y="464">封閉（CVVH 不用透析液）</text>
+  <line x1="606" y1="380" x2="660" y2="380" class="lead"/>
+  <text class="t-en" x="666" y="383">中空纖維內腔 = 血液</text>
+  <line x1="630" y1="408" x2="660" y2="408" class="lead"/>
+  <text class="t-en" x="666" y="411">纖維外、外殼側 = 濾液</text>
+  <text class="t-val" x="600" y="560" text-anchor="middle">TMP 37</text>
+  ${label('flt',652,330)}`, [552,184,240,386]);
+// 7 P transducer
+s += hit('P', `<line x1="720" y1="252" x2="720" y2="208" class="line"/>${gauge(720,194,'P',30)}${label('P',746,178)}`, [700,150,170,90]);
+// 8 blood leak detector
+s += hit('bld', `
+  <rect x="808" y="330" width="44" height="40" rx="5" class="dark"/>
+  <circle cx="818" cy="350" r="4" fill="var(--blood)"><animate attributeName="opacity" values="1;.3;1" dur="1.4s" repeatCount="indefinite"/></circle>
+  <line x1="822" y1="350" x2="848" y2="350" stroke="var(--blood)" stroke-width="1" stroke-dasharray="2 2"/>
+  ${label('bld',866,342)}`, [800,322,175,56]);
+// 9 effluent pump
+s += hit('ep', `${pump('ep',830,450,'fWaste',2.1,'sWaste')}${label('ep',878,450)}`, [786,404,190,92]);
+// 10 waste bag
+s += hit('wst', `
+  <g clip-path="url(#wclip)"><rect x="860" y="660" width="100" height="60" class="tWaste"><animate attributeName="y" values="680;610;680" dur="30s" repeatCount="indefinite"/></rect></g>
+  <path d="M870 584 h70 a8 8 0 0 1 8 8 v92 a18 18 0 0 1 -18 18 h-50 a18 18 0 0 1 -18 -18 v-92 a8 8 0 0 1 8 -8z" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+  ${[610,630,650,670].map(y=>`<line x1="938" y1="${y}" x2="948" y2="${y}" class="thin"/>`).join('')}
+  ${num('wst',780,640)}<text class="t-name" x="766" y="644" text-anchor="end">廢液袋</text><text class="t-en" x="766" y="657" text-anchor="end">Effluent bag</text>`, [690,574,270,140]);
+// 14 drip chamber + V
+s += hit('V', `
+  <line x1="390" y1="574" x2="390" y2="548" class="line"/>${gauge(390,532,'54',20)}
+  <g clip-path="url(#dclip)">
+    <rect x="377" y="604" width="26" height="60" class="fBlood" opacity=".85"/>
+    <circle cx="390" cy="590" r="2.5" class="fBlood"><animate attributeName="cy" values="580;604" dur=".9s" repeatCount="indefinite"/></circle>
+  </g>
+  <rect x="377" y="574" width="26" height="78" rx="10" class="glass" fill="none"/>
+  <line x1="372" y1="604" x2="408" y2="604" class="lead"/>
+  <text class="t-en" x="370" y="586" text-anchor="end">空氣在上</text><text class="t-en" x="370" y="600" text-anchor="end">液面</text>
+  ${label('V',318,682)}`, [304,500,130,210]);
+// 15 air detector
+s += hit('air', `
+  <rect x="268" y="600" width="40" height="40" rx="5" class="dark"/>
+  ${[0,1,2].map(i=>`<path d="M${280+i*6} 594 q4 -6 0 -12" class="thin" stroke="var(--fluid)"><animate attributeName="opacity" values="0;1;0" dur="1.2s" begin="${i*.3}s" repeatCount="indefinite"/></path>`).join('')}
+  ${num('air',288,560)}`, [258,544,60,104]);
+// 16 venous clamp
+s += hit('clp', `
+  <rect x="188" y="600" width="40" height="40" rx="5" class="metal"/>
+  <path d="M196 606 l12 12 l-12 12" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M220 606 l-8 12 l8 12" fill="none" stroke="var(--ink)" stroke-width="2"/>
+  ${num('clp',208,560)}`, [178,544,60,104]);
+s += `<text class="t-name" x="140" y="690">空氣偵測器 → 靜脈夾</text><text class="t-en" x="140" y="703">Air detector · Venous clamp</text>`;
+// flow arrows on main lines
+const arrow=(x,y,rot,cls)=>`<path d="M-5 -5 L4 0 L-5 5" transform="translate(${x} ${y}) rotate(${rot})" fill="none" class="${cls}" stroke-width="2"/>`;
+s += arrow(500,130,0,'sBlood')+arrow(520,620,180,'sBlood')+arrow(700,252,0,'sWaste')+arrow(830,520,90,'sWaste')+arrow(470,200,-90,'sFluid')+arrow(470,580,90,'sFluid');
+
+svg.innerHTML = s;
+
+/* ---------- UI ---------- */
+const list=document.getElementById('list'), detail=document.getElementById('detail');
+const COL={blood:'--blood',fluid:'--fluid',waste:'--waste',hep:'--hep'};
+const ROUTE={blood:'血液路線',fluid:'置換液路線',waste:'廢液路線',hep:'抗凝路線'};
+PARTS.forEach((p,i)=>{
+  list.insertAdjacentHTML('beforeend',`<li><button class="part" data-id="${p.id}" style="--c:var(${COL[p.c]})"><b>${String(i+1).padStart(2,'0')}</b><span>${p.n}</span><em></em></button></li>`);
+});
+function select(id){
+  const p=PARTS[IDX[id]-1]; if(!p) return;
+  svg.querySelectorAll('.hit').forEach(g=>g.classList.toggle('on',g.dataset.id===id));
+  list.querySelectorAll('.part').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
+  detail.innerHTML=`<div class="eyebrow">No. ${String(IDX[id]).padStart(2,'0')} · ${ROUTE[p.c]}</div><h3>${p.n}</h3><div class="en">${p.en}</div><p>${p.d}</p><span class="val">${p.v}</span>`;
+}
+svg.addEventListener('click',e=>{const g=e.target.closest('.hit'); if(g) select(g.dataset.id);});
+svg.addEventListener('keydown',e=>{const g=e.target.closest('.hit'); if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();select(g.dataset.id);}});
+list.addEventListener('click',e=>{const b=e.target.closest('.part'); if(!b) return; select(b.dataset.id);
+  const g=svg.querySelector(`.hit[data-id="${b.dataset.id}"]`); if(g&&g.scrollIntoView) g.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});});
+document.querySelectorAll('[data-layer]').forEach(b=>{ if(b.tagName!=='BUTTON') return; b.onclick=()=>{
+  const on=b.getAttribute('aria-pressed')!=='true'; b.setAttribute('aria-pressed',on);
+  svg.querySelectorAll(`g.lay[data-layer="${b.dataset.layer}"]`).forEach(g=>g.classList.toggle('layer-off',!on));
+};});
+const play=document.getElementById('play');
+function setPlay(on){ on?svg.unpauseAnimations():svg.pauseAnimations(); play.setAttribute('aria-pressed',on); play.lastChild.textContent=on?'流動中':'已暫停'; }
+play.onclick=()=>setPlay(play.getAttribute('aria-pressed')!=='true');
+if(matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(()=>setPlay(false),50);
+select('flt');
+})();
+</script>
