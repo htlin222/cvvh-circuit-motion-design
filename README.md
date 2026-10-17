@@ -2,14 +2,17 @@
 
 Motion-design explainer of a CVVH (continuous veno-venous hemofiltration) circuit, modelled on an Infomed HF440 at the bedside. Settings shown are read from a real machine screen: Qb 150 ml/min, replacement 2000 ml/h (50 % pre / 50 % post), net UF 100 ml/h, effluent ≈ 2100 ml/h, anticoagulant 14.2 ml/h.
 
+**Live site:** https://htlin222.github.io/cvvh-circuit-motion-design/ — video, interactive schematic and 3D model (served from `docs/` on `main`).
+
 **Footage:** the 30 s 1920×1080 video (dark mode, with sound) is attached to the [latest release](../../releases/latest).
 
 ## Contents
 
 | Path | What it is |
 | --- | --- |
-| `web/cvvh2d.html` | Interactive 2D schematic. Four animated flow lines (blood, replacement, effluent, anticoagulant), 16 tappable components with explanations, layer toggles. Light/dark aware. |
-| `web/cvvh3d.html` | Earlier rotating 3D (Three.js) specimen-plate version. |
+| `docs/index.html` | GitHub Pages landing page: embedded video with scene jump links, settings, links to the interactive pages. |
+| `docs/schematic.html` | Interactive 2D schematic. Four animated flow lines (blood, replacement, effluent, anticoagulant), 16 tappable components with explanations, layer toggles. Light/dark aware. |
+| `docs/3d.html` | Earlier rotating 3D (Three.js) specimen-plate version. |
 | `video/video.html` | 1920×1080 video stage. Same schematic, frameless, HUD around the edges, scripted 9-scene timeline. Exposes `render(t)` for deterministic frame capture. |
 | `video/sound.py` | Synthesized sci-fi sound design (drone, pump bed, transition whoosh + sub hit + shimmer, HUD blips, zoom servo). numpy/scipy only, no samples. |
 | `video/render.py` | Renders frames with Playwright, builds the audio, encodes `dist/CVVH_circuit_30s_1080p.mp4` with ffmpeg. |
