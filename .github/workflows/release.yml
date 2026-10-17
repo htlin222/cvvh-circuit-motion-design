@@ -3,6 +3,8 @@ name: Build footage & release
 on:
   push:
     tags: ["v*"]
+    branches: [main]
+    paths: ["video/**", ".github/workflows/release.yml"]
   workflow_dispatch:
 
 permissions:
