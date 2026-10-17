@@ -1,0 +1,48 @@
+name: Build footage & release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System deps (ffmpeg, CJK fonts)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-cjk fonts-noto-cjk-extra fonts-dejavu-core
+          fc-cache -f
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python deps
+        run: |
+          pip install playwright numpy scipy
+          python -m playwright install --with-deps chromium
+
+      - name: Render 1920x1080 video
+        run: python video/render.py
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
+          name: CVVH circuit 30s (1920×1080)
+          files: dist/CVVH_circuit_30s_1080p.mp4
+          body: |
+            30-second 1920×1080 dark-mode motion-design explainer of a CVVH circuit (Infomed HF440), with synthesized sci-fi sound design.
+
+            - 9 scenes: overview → arterial draw → anticoagulant → pre-dilution → hemofilter → effluent → heater/post-dilution → return → summary
+            - Continuous camera path with zoom-in per scene; highlights and HUD crossfade across cuts
+            - H.264 30 fps + AAC 192 kbps
+
+            Built by CI from `video/render.py`.
